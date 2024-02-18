@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  username  String     @unique @db.VarChar(150)
+  password  String     @db.VarChar(72)
+  fname     String
+  lname     String
+  email     String?
+  address   String
+  phone     String
+  orders    Order[]
+  carts     Cart[]
+  shippings Shipping[]
+
+  @@map("users")
+}
+
+model Order {
+  id          Int       @id @default(autoincrement())
+  date        DateTime
+  totalamount Int
+  paymentId   Int?      @map("payment_id")
+  shippingId  Int?      @map("shipping_id")
+  user        User?     @relation(fields: [userId], references: [id])
+  userId      Int
+  
+  Cart        Cart[]
+  Payment     Payment[]
+ 
+
+  @@map("orders")
+}
+
+model Cart {
+  id       Int       @id @default(autoincrement())
+  quantity String
+  userId   Int
+  products Product[]
+
+  orderId Int?
+  User    User   @relation(fields: [userId], references: [id])
+  order   Order? @relation(fields: [orderId], references: [id])
+
+  productId Int?
+
+  @@map("carts")
+}
+
+model Product {
+  id            Int    @id @default(autoincrement())
+  name          String
+  description   String
+  price         Int
+  stockquantity Int
+
+  categories Category[]
+
+  cartId Int?
+
+  Cart Cart[]
+
+  @@map("products")
+}
+
+model Category {
+  id           Int     @id @default(autoincrement())
+  categoryname String
+  productId    Int
+  Product      Product @relation(fields: [productId], references: [id])
+
+  @@map("categories")
+}
+
+model Payment {
+  id          Int      @id @default(autoincrement())
+  amount      Int
+  paymentdate DateTime
+  paymenthod  String
+  orderId     Int?     @map("order_id")
+  Order       Order?   @relation(fields: [orderId], references: [id])
+
+  @@map("payments")
+}
+
+enum Status {
+  pending
+  done
+
+  @@map("statuses")
+}
+
+model Shipping {
+  id              Int      @id @default(autoincrement())
+  shippingdate    DateTime
+  shippingaddress String
+  status          Status
+  userId          Int
+
+ 
+  User  User    @relation(fields: [userId], references: [id])
+ 
+
+  @@map("shippings")
+}
